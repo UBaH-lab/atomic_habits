@@ -1,0 +1,59 @@
+services:
+  # База данных PostgreSQL
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-atomic_habits}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # Django
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+  # Celery Worker
+  celery_worker:
+    build: .
+    command: celery -A config worker -l info --pool=threads
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+
+  # Celery Beat
+  celery_beat:
+    build: .
+    command: celery -A config beat -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
