@@ -33,6 +33,8 @@ INSTALLED_APPS = [
 
     # Сторонние
     'rest_framework',
+    'corsheaders',
+    'drf_spectacular',
 
     # Свои
     'users',
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -128,6 +131,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Atomic Habits API',
+    'DESCRIPTION': 'API for managing habits with Telegram notifications',
+    'VERSION': '1.0.0',
 }
 
 
@@ -148,3 +158,19 @@ CELERY_BEAT_MAX_LOOP_INTERVAL = 1
 
 # Telegram
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS = True  # для разработки
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
+
+
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Atomic Habits API',
+    'DESCRIPTION': 'API for managing habits with Telegram notifications',
+    'VERSION': '1.0.0',
+}
