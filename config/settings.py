@@ -167,8 +167,6 @@ CORS_ALLOW_ALL_ORIGINS = True  # для разработки
 # ]
 
 
-
-
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Atomic Habits API',
     'DESCRIPTION': 'API for managing habits with Telegram notifications',
