@@ -6,14 +6,13 @@ from .serializers import HabitSerializer, PublicHabitSerializer
 from .permissions import IsOwner
 from .paginators import HabitPaginator
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import viewsets
+
 
 @extend_schema(
     parameters=[
         OpenApiParameter(name='id', type=int, location=OpenApiParameter.PATH),
     ]
 )
-
 class HabitViewSet(viewsets.ModelViewSet):
     """CRUD для привычек текущего пользователя."""
     serializer_class = HabitSerializer
@@ -35,4 +34,3 @@ class PublicHabitListAPIView(generics.ListAPIView):
     serializer_class = PublicHabitSerializer
     pagination_class = HabitPaginator
     permission_classes = [AllowAny]
-    
