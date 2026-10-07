@@ -1,64 +1,5 @@
-name: CI/CD
 
-on:
-  push:
-    branches: [main, develop, deploy]
-  pull_request:
-    branches: [main]
-
-jobs:
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run tests
-        env:
-          SECRET_KEY: django-insecure-test-key-for-ci-only
-          DEBUG: True
-          TELEGRAM_BOT_TOKEN: test-token
-        run: python manage.py test
-
-  lint:
-    needs: tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install flake8
-        run: pip install flake8
-
-      - name: Run flake8
-        run: flake8 .
-
-  build:
-    needs: [tests, lint]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t atomic_habits:latest .
-
-  deploy:
+deploy:
     needs: [tests, lint, build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -70,10 +11,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/atomic_habits
+            cd ~/atomic_habits
             git pull origin main
-            source venv/bin/activate
-            pip install -r requirements.txt
-            python manage.py migrate
-            python manage.py collectstatic --noinput
-            sudo systemctl restart atomic_habits
+            docker compose up -d --build
+            docker compose exec -T web python manage.py migrate
+            docker compose exec -T web python manage.py collectstatic --noinput
