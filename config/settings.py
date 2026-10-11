@@ -121,6 +121,7 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # DRF
@@ -132,12 +133,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
-
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Atomic Habits API',
-    'DESCRIPTION': 'API for managing habits with Telegram notifications',
-    'VERSION': '1.0.0',
 }
 
 
@@ -165,8 +160,6 @@ CORS_ALLOW_ALL_ORIGINS = True  # для разработки
 #     "http://localhost:3000",
 #     "http://127.0.0.1:3000",
 # ]
-
-
 
 
 SPECTACULAR_SETTINGS = {

@@ -1,79 +1,69 @@
-# Atomic Habits 🎯
+# Atomic Habits API
 
-Проект для управления привычками с отправкой уведомлений в Telegram.
+REST API для сервиса учёта привычек (Django REST Framework).
+Планировщик рассылки напоминаний в Telegram через Celery Beat.
 
-## Технологии
-- Python 3.12 + Django 6.0
-- PostgreSQL 16
-- Redis 7
-- Celery (worker + beat)
-- Docker Compose
-- DRF + JWT
-- Swagger/OpenAPI (drf-spectacular)
+## Стек
 
-## Установка и запуск
+- Python 3.12, Django 5, DRF, SimpleJWT
+- PostgreSQL 16, Redis 7, Celery (worker + beat)
+- Nginx + Gunicorn (продакшен)
+- Docker, Docker Compose
+- CI/CD: GitHub Actions
 
-### 1. Клонировать репозиторий
-```bash
-git clone git@github.com:UBaH-lab/atomic_habits.git
-cd atomic_habits
-```
+## Переменные окружения
 
-### 2. Создать .env файл
-Создай файл `.env` в корне проекта:
+Скопируйте шаблон и заполните значения:
 
-```env
-SECRET_KEY=твой_django_secret_key
-DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
+    cp .env.template .env
 
-DB_ENGINE=django.db.backends.postgresql
-DB_NAME=atomic_habits
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=db
-DB_PORT=5432
+| Переменная | Назначение |
+|---|---|
+| SECRET_KEY | секретный ключ Django |
+| DEBUG | True/False — режим отладки (в проде False) |
+| ALLOWED_HOSTS | разрешённые хосты через запятую |
+| DB_ENGINE | django.db.backends.postgresql (пусто — SQLite) |
+| DB_NAME / DB_USER / DB_PASSWORD | данные БД |
+| DB_HOST / DB_PORT | хост и порт БД (в Docker: db / 5432) |
+| POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD | контейнер PostgreSQL |
+| CELERY_BROKER_URL / CELERY_RESULT_BACKEND | Redis (в Docker: redis://redis:6379/0) |
+| TELEGRAM_BOT_TOKEN | токен Telegram-бота |
 
-CELERY_BROKER_URL=redis://redis:6379/0
-CELERY_RESULT_BACKEND=redis://redis:6379/0
+## Запуск локально (Docker)
 
-TELEGRAM_BOT_TOKEN=твой_токен_от_botfather
-```
+    docker compose up -d --build
+    docker compose exec web python manage.py migrate
+    docker compose exec web python manage.py createsuperuser
 
-### 3. Запустить проект
-```bash
-docker-compose up --build
-```
+Приложение доступно через Nginx: http://localhost/
+Админка: http://localhost/admin/
 
-### 4. Выполнить миграции (в новом терминале)
-```bash
-docker-compose exec web python manage.py migrate
-```
+## Запуск без Docker
 
-### 5. Создать суперпользователя
-```bash
-docker-compose exec web python manage.py createsuperuser
-```
+    python -m venv venv
+    source venv/bin/activate        # Windows: venv\Scripts\activate
+    pip install -r requirements.txt
+    python manage.py migrate
+    python manage.py.py runserver
 
-### 6. Открыть в браузере
-- Админка: http://127.0.0.1:8000/admin/
-- Swagger UI: http://127.0.0.1:8000/api/docs/
-- API: http://127.0.0.1:8000/api/
+## CI/CD (GitHub Actions)
 
-## Структура проекта
-```
-atomic_habits/
-├── config/          # Настройки Django, Celery
-├── habits/          # Приложение привычек
-├── users/           # Приложение пользователей
-├── Dockerfile
-├── docker-compose.yml
-├── .env
-└── requirements.txt
-```
+При каждом push/PR выполняется конвейер:
 
-## Telegram уведомления
-Celery Beat отправляет задачу каждую минуту.
-Celery Worker проверяет привычки и отправляет уведомления в Telegram.
+1. **tests** — прогон тестов проекта
+2. **lint** — проверка flake8
+3. **build** — сборка Docker-образа
+4. **deploy** — только при push в `main`: деплой на удалённый сервер
+   по SSH (git pull → docker compose up -d --build → migrate → collectstatic)
 
-⚠️ В России api.telegram.org заблокирован. Нужен VPN или рабочий прокси.
+## Деплой на сервер
+
+- Виртуальная машина Yandex Cloud (Ubuntu 24.04, IP выдается при создании)
+- Доступ по SSH-ключу, firewall: порты 22, 80, 443 (ufw + группа безопасности)
+- Docker + Docker Compose на сервере
+- Секреты репозитория: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY
+- `.env` создаётся на сервере (в git не хранится)
+- Контейнеры с `restart: always` — авто-перезапуск
+
+После merge в `main` приложение обновляется автоматически
+и доступно по адресу сервера.
